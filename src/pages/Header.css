@@ -1,0 +1,61 @@
+/* Header.css */
+
+.app-header {
+    background: linear-gradient(90deg, #2f1a74, #1f1347);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 12px;;
+  }
+  
+  .logo-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 16px;
+    display: block;
+  }
+  
+  .logo-text {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .menu-container {
+    flex-grow: 1;
+  }
+  
+  .menu {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .menu li {
+    margin: 0 16px;
+  }
+  
+  .menu a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+
+  .dashboard {
+    padding: 13px 17px;
+    border-radius: 13px;
+    border: 1px solid #ffffff;
+  }
+  
+  .metamask-container {
+    margin-left: 16px;
+  }
+  
