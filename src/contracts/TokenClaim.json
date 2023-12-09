@@ -1,6 +1,19 @@
 [
   {
     "inputs": [
+      { "internalType": "address", "name": "_token", "type": "address" },
+      { "internalType": "uint256", "name": "_rewardTime", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "_rewardPerClaim",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
       { "internalType": "address", "name": "owner", "type": "address" }
     ],
     "name": "OwnableInvalidOwner",
@@ -12,6 +25,25 @@
     ],
     "name": "OwnableUnauthorizedAccount",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "DebugLog",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -50,7 +82,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "newClaimInterval",
+        "name": "newRewardTime",
         "type": "uint256"
       }
     ],
@@ -81,6 +113,25 @@
       }
     ],
     "name": "RewardsResumed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "newTokenContract",
+        "type": "address"
+      }
+    ],
+    "name": "TokenContractUpdated",
     "type": "event"
   },
   {
@@ -137,40 +188,27 @@
         "type": "uint256"
       }
     ],
-    "name": "WithdrawalCompleted",
+    "name": "UnclaimedTokensUpdated",
     "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "user",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "WithdrawalInitiated",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "claimInterval",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [],
     "name": "claimTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "contractState",
+    "outputs": [
+      {
+        "internalType": "enum RewardContract.ContractState",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -184,8 +222,37 @@
   },
   {
     "inputs": [],
-    "name": "getRemainingTokens",
+    "name": "getContractBalance",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" }
+    ],
+    "name": "getNextClaimTime",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" }
+    ],
+    "name": "getRewardHistory",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "address", "name": "user", "type": "address" },
+          { "internalType": "uint256", "name": "date", "type": "uint256" },
+          { "internalType": "uint256", "name": "amount", "type": "uint256" }
+        ],
+        "internalType": "struct RewardContract.RewardEntry[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -197,35 +264,12 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getTotalDistributedRewards",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       { "internalType": "address", "name": "user", "type": "address" }
     ],
-    "name": "getUserClaimStatus",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "name": "getUpdatedUnclaimedTokens",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "hasClaimed",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "initiateWithdrawal",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -250,8 +294,10 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "renounceOwnership",
+    "inputs": [
+      { "internalType": "address[]", "name": "addresses", "type": "address[]" }
+    ],
+    "name": "registerUser",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -272,8 +318,8 @@
   },
   {
     "inputs": [],
-    "name": "rewardsPaused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "name": "rewardTime",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -309,11 +355,7 @@
         "name": "newRewardPerClaim",
         "type": "uint256"
       },
-      {
-        "internalType": "uint256",
-        "name": "newClaimInterval",
-        "type": "uint256"
-      }
+      { "internalType": "uint256", "name": "newRewardTime", "type": "uint256" }
     ],
     "name": "updateRewardParameters",
     "outputs": [],
@@ -339,13 +381,6 @@
     "name": "withdrawRemainingTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "withdrawalAmount",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
     "type": "function"
   }
 ]

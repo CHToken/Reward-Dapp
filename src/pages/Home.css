@@ -1,38 +1,106 @@
 /* Home.css */
+.dashboard-section {
+  display: flex;
+  justify-content: center;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  position: relative;
+  background-image: url(https://swordbot.online/images/bg-hero.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
 
 .dashboard-container {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
+  flex-direction: column;
   min-height: 100vh;
-  background-color: #f4f4f4;
+  background-color: #5c437e6b;
+  align-items: center;
+  border-radius: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 25px;
+  max-width: 1250px;
+}
+
+.row-container {
+  width: auto;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 20px auto;
+  justify-content: space-between;
+}
+
+.card-Items {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+  font-size: 25px;
+  font-family: Poppins;
+  font-weight: 600;
+}
+
+/* Add media query for smaller screens */
+@media only screen and (min-width: 768px) {
+  .card-Items {
+    width: 48%;
+  }
+}
+
+.countdown-container {
+  text-align: center;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: white;
+  font-size: 20px;
 }
 
 .card {
   border-radius: 16px;
-  padding: 20px;
+  padding: 15px;
   background-color: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
-  margin-bottom: 20px;
+  background: #1f1347;
+  color: white;
 }
 
 .card-title {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   margin-bottom: 10px;
+  text-transform: uppercase;
+  color: #ead050;
 }
 
 .claim-button {
-  padding: 10px 20px;
-  font-size: 1rem;
+  padding: 10px;
+  font-size: 17px;
   cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
   background-color: #2f1a74;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+  color: #ffffff;
+  border: 5px solid #ead050;
+  border-radius: 14px;
   transition: background-color 0.3s ease-in-out;
 }
 
 .claim-button:hover {
   background-color: #1f1347;
+}
+
+/* Add media query to hide logo and Reward Dashboard on larger screens */
+@media only screen and (min-width: 768px) {
+  .logo-container {
+    display: none;
+  }
+  .menu {
+    flex: 1;
+  }
+  .dashboard {
+    margin: 0;
+  }
 }

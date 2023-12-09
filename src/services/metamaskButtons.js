@@ -3,7 +3,6 @@ import {
   MetaMaskButton,
   useAccount,
 } from "@metamask/sdk-react-ui";
-// import Button from "@mui/material/Button";
 
 const MetamaskButtons = () => {
   const { connect, disconnect } = useAccount();

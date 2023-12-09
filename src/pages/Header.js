@@ -12,10 +12,7 @@ const Header = () => {
       <nav className="menu-container">
         <ul className="menu">
           <li className='dashboard'>
-            <a href="/dashboard">Dashboard</a>
-          </li>
-          <li>
-            <a href="/rewards">Rewards</a>
+            <span>REWARD DASHBOARD</span>
           </li>
         </ul>
       </nav>
