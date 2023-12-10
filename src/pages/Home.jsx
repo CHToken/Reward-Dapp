@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TokenClaimABI from '../contracts/TokenClaim.json';
 import { CONTRACT_ADDRESS } from '../config';
+import { Alert, notification } from 'antd';
 import './Home.css';
 import Web3 from 'web3';
 import moment from 'moment';
@@ -15,6 +16,8 @@ const Home = () => {
   const [unclaimedTokens, setUnclaimedTokens] = useState(0);
   const [nextClaimTime, setNextClaimTime] = useState(0);
   const [rewardPerClaim, setRewardPerClaim] = useState(0);
+  const [claimSuccess, setClaimSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,11 +34,19 @@ const Home = () => {
         if (accounts.length === 0) {
           console.error('No accounts found. Please connect your wallet.');
           setIsConnected(false);
+          notification.warning({
+            message: 'Wallet Disconnected',
+            description: 'Please connect your wallet.',
+          });
           return;
         }
 
         setAccount(accounts[0]);
         setIsConnected(true);
+        notification.success({
+          message: 'Wallet Connected',
+          description: 'Your wallet is connected successfully.',
+        });
 
         const contractInstance = new web3.eth.Contract(TokenClaimABI, CONTRACT_ADDRESS);
         setContract(contractInstance);
@@ -78,18 +89,30 @@ const Home = () => {
       }
 
       await contract.methods.claimTokens().send({ from: account });
+
+      // Set success state and message
+      setClaimSuccess(true);
+      setSuccessMessage('Tokens successfully claimed!');
+      notification.success({
+        message: 'Tokens Claimed',
+        description: 'Tokens have been successfully claimed.',
+      });
     } catch (error) {
       console.error('Error claiming tokens:', error);
+      notification.error({
+        message: 'Claim Tokens Failed',
+        description: 'There was an error while claiming tokens. Please try again.',
+      });
     }
   };
 
   const formatTime = (seconds) => {
     const duration = moment.duration(Number(seconds), 'seconds');
     const nextClaimTimeUTC = moment.utc(duration.asMilliseconds()).toDate();
-  
+
     // Get the user's local time zone
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  
+
     // Format the nextClaimTime in the user's local time zone
     const formattedTime = nextClaimTimeUTC.toLocaleTimeString(undefined, {
       timeZone: userTimeZone,
@@ -98,13 +121,24 @@ const Home = () => {
       minute: 'numeric',
       second: 'numeric',
     });
-  
+
     return formattedTime;
   };
 
   return (
     <div className="dashboard-section">
       <div className="dashboard-container">
+        {/* Add the Alert component to display success message */}
+        {claimSuccess && (
+          <Alert
+            message={successMessage}
+            type="success"
+            showIcon
+            closable
+            onClose={() => setClaimSuccess(false)}
+          />
+        )}
+
         {/* Countdown for Next Claim Time */}
         <div className="countdown-container">
           <h4>Next Claim</h4>

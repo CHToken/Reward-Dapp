@@ -1,6 +1,6 @@
 // Header.js
 import React from 'react';
-import MetamaskButtons from '../services/metamaskButtons';
+import ConnectButton from '../services/walletConnect';
 import './Header.css';
 
 const Header = () => {
@@ -17,7 +17,7 @@ const Header = () => {
         </ul>
       </nav>
       <div className="metamask-container">
-        <MetamaskButtons />
+        <ConnectButton />
       </div>
     </header>
   );
