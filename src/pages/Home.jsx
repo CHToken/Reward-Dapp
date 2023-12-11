@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TokenClaimABI from '../contracts/TokenClaim.json';
 import { CONTRACT_ADDRESS } from '../config';
-import { Alert, notification } from 'antd';
+import { notification } from 'antd';
 import './Home.css';
 import Web3 from 'web3';
 import moment from 'moment';
@@ -11,18 +11,16 @@ const Home = () => {
   const [contract, setContract] = useState(null);
   const [web3Instance, setWeb3Instance] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isRewardsPaused, setIsRewardsPaused] = useState(false);
+  const [isRewardsPaused, setIsRewardsPaused] = useState(true);
   const [totalRewards, setTotalRewards] = useState(0);
   const [unclaimedTokens, setUnclaimedTokens] = useState(0);
   const [nextClaimTime, setNextClaimTime] = useState(0);
   const [rewardPerClaim, setRewardPerClaim] = useState(0);
-  const [claimSuccess, setClaimSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const web3 = new Web3(window.ethereum || 'http://localhost:7545');
+        const web3 = new Web3(window.ethereum);
         setWeb3Instance(web3);
 
         // Enable autoRefreshOnNetworkChange to avoid memory leak
@@ -30,36 +28,26 @@ const Home = () => {
         web3.eth.autoRefreshOnNetworkChange = false;
 
         const accounts = await web3.eth.getAccounts();
+        const currentAccount = accounts[0] || '';
 
-        if (accounts.length === 0) {
-          console.error('No accounts found. Please connect your wallet.');
-          setIsConnected(false);
-          notification.warning({
-            message: 'Wallet Disconnected',
-            description: 'Please connect your wallet.',
-          });
-          return;
-        }
+        setAccount(currentAccount);
 
-        setAccount(accounts[0]);
-        setIsConnected(true);
-        notification.success({
-          message: 'Wallet Connected',
-          description: 'Your wallet is connected successfully.',
-        });
-
+        // Always attempt to fetch data, even if not connected
         const contractInstance = new web3.eth.Contract(TokenClaimABI, CONTRACT_ADDRESS);
         setContract(contractInstance);
 
-        const isPaused = await contractInstance.methods.contractState().call() === '1';
+        const contractState = await contractInstance.methods.contractState().call();
         const totalRewards = await contractInstance.methods.totalRewards().call();
-        const unclaimedTokens = await contractInstance.methods.getUpdatedUnclaimedTokens(account).call();
+        const unclaimedTokens = await contractInstance.methods.getUpdatedUnclaimedTokens(currentAccount).call();
         const rewardPerClaim = await contractInstance.methods.rewardPerClaim().call();
+        const nextClaimTime = await contractInstance.methods.getNextClaimTime(currentAccount).call();
 
-        setIsRewardsPaused(isPaused);
+        setIsConnected(accounts.length > 0);
+        setIsRewardsPaused(contractState > '0');
         setTotalRewards(web3.utils.fromWei(totalRewards, 'ether'));
         setUnclaimedTokens(web3.utils.fromWei(unclaimedTokens, 'ether'));
         setRewardPerClaim(web3.utils.fromWei(rewardPerClaim, 'ether'));
+        setNextClaimTime(nextClaimTime);
 
         console.log('Data Fetched Successfully');
       } catch (error) {
@@ -67,36 +55,39 @@ const Home = () => {
       }
     };
 
+    // Fetch data immediately when the component mounts
     fetchData();
-  }, [account]);
 
-  useEffect(() => {
-    const intervalId = setInterval(async () => {
-      if (account && contract) {
-        const nextClaimTime = await contract.methods.getNextClaimTime(account).call();
-        setNextClaimTime(nextClaimTime);
-      }
-    }, 10000);
+    // Set up an interval to fetch data every 10 seconds
+    const intervalId = setInterval(fetchData, 10000);
 
+    // Clean up the interval when the component unmounts
     return () => clearInterval(intervalId);
-  }, [account, contract]);
+  }, []);
 
   const handleClaimTokens = async () => {
     try {
       if (!isConnected || !account || !contract || !web3Instance) {
         console.error('Account, contract, or web3Instance not initialized. Cannot claim tokens.');
+  
+        // Show notification to connect wallet
+        notification.warning({
+          message: 'Wallet Not Connected',
+          description: 'Please connect your wallet to claim tokens.',
+        });
+  
         return;
       }
-
+  
+      // Continue with claiming tokens
       await contract.methods.claimTokens().send({ from: account });
-
-      // Set success state and message
-      setClaimSuccess(true);
-      setSuccessMessage('Tokens successfully claimed!');
+  
+      // Show success notification
       notification.success({
         message: 'Tokens Claimed',
         description: 'Tokens have been successfully claimed.',
       });
+  
     } catch (error) {
       console.error('Error claiming tokens:', error);
       notification.error({
@@ -128,17 +119,6 @@ const Home = () => {
   return (
     <div className="dashboard-section">
       <div className="dashboard-container">
-        {/* Add the Alert component to display success message */}
-        {claimSuccess && (
-          <Alert
-            message={successMessage}
-            type="success"
-            showIcon
-            closable
-            onClose={() => setClaimSuccess(false)}
-          />
-        )}
-
         {/* Countdown for Next Claim Time */}
         <div className="countdown-container">
           <h4>Next Claim</h4>
@@ -160,9 +140,9 @@ const Home = () => {
             </div>
           </div>
           <div className="card-Items">
-            <div className="card rewards-paused">
-              <h4 className="card-title">Rewards Paused</h4>
-              <p>{isRewardsPaused ? 'Yes' : 'No'}</p>
+            <div className="card rewards-state">
+              <h4 className="card-title">Reward Status</h4>
+              <p>{isRewardsPaused ? 'Paused' : 'Resumed'}</p>
             </div>
           </div>
           <div className="card-Items">

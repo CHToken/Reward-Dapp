@@ -83,8 +83,8 @@
   text-transform: uppercase;
   background-color: #2f1a74;
   color: #ffffff;
-  border: 5px solid #ead050;
-  border-radius: 14px;
+  border: 3px dotted #ead050;
+  border-radius: 23px;
   transition: background-color 0.3s ease-in-out;
 }
 
