@@ -75,7 +75,7 @@
   color: #ead050;
 }
 
-.claim-button {
+/* .claim-button {
   padding: 10px;
   font-size: 17px;
   cursor: pointer;
@@ -90,7 +90,7 @@
 
 .claim-button:hover {
   background-color: #1f1347;
-}
+} */
 
 /* Add media query to hide logo and Reward Dashboard on larger screens */
 @media only screen and (min-width: 768px) {
@@ -103,4 +103,34 @@
   .dashboard {
     margin: 0;
   }
+}
+
+.buttons-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Mobile layout */
+.buttons-container.column-layout {
+  flex-direction: column;
+}
+
+.claim-button,
+.update-tokens-button {
+  padding: 12px 15px; /* Adjust the padding as needed */
+  font-size: 17px;
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: #2f1a74;
+  color: #ffffff;
+  border: 3px dotted #ff8c00; /* Dotted border with orange color */
+  border-radius: 23px; /* Adjust the border-radius as needed */
+  transition: background-color 0.3s ease-in-out;
+}
+
+.claim-button:hover,
+.update-tokens-button:hover {
+  background-color: #1f1347;
 }

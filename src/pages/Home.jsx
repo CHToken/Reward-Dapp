@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import TokenClaimABI from '../contracts/TokenClaim.json';
 import { CONTRACT_ADDRESS } from '../config';
-import { notification } from 'antd';
+import { notification, Spin, Typography } from 'antd';
 import './Home.css';
 import Web3 from 'web3';
 import moment from 'moment';
+
+const { Paragraph } = Typography;
 
 const Home = () => {
   const [account, setAccount] = useState('');
@@ -15,7 +17,9 @@ const Home = () => {
   const [gettotalRewards, setgetTotalRewards] = useState(0);
   const [unclaimedTokens, setUnclaimedTokens] = useState(0);
   const [nextClaimTime, setNextClaimTime] = useState(0);
+  const [claimingTokens, setClaimingTokens] = useState(false);
   const [rewardPerClaim, setRewardPerClaim] = useState(0);
+  const [updatingTokens, setUpdatingTokens] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,7 +62,6 @@ const Home = () => {
       }
   };  
 
-    // Fetch data immediately when the component mounts
     fetchData();
 
     // Set up an interval to fetch data every 10 seconds
@@ -70,6 +73,7 @@ const Home = () => {
 
   const handleClaimTokens = async () => {
     try {
+      setClaimingTokens(true);
       if (!isConnected || !account || !contract || !web3Instance) {
         console.error('Account, contract, or web3Instance not initialized. Cannot claim tokens.');
   
@@ -98,6 +102,10 @@ const Home = () => {
         description: 'There was an error while claiming tokens. Please try again.',
       });
     }
+    finally {
+      // Set the loading state back to false, whether the claim was successful or not
+      setClaimingTokens(false);
+    }
   };
 
   const formatTime = (seconds) => {
@@ -119,6 +127,42 @@ const Home = () => {
     return formattedTime;
   };
 
+  const handleUpdateTokens = async () => {
+    try {
+      setUpdatingTokens(true);
+  
+      if (!isConnected || !account || !contract || !web3Instance) {
+        console.error('Account, contract, or web3Instance not initialized. Cannot update tokens.');
+  
+        // Show notification to connect wallet
+        notification.warning({
+          message: 'Wallet Not Connected',
+          description: 'Please connect your wallet to update tokens.',
+        });
+  
+        return;
+      }
+  
+      // Continue with updating tokens
+      await contract.methods.getUpdatedUnclaimedTokens(account).send({ from: account });
+  
+      // Show success notification
+      notification.success({
+        message: 'Tokens Updated',
+        description: 'Tokens have been successfully updated.',
+      });
+    } catch (error) {
+      console.error('Error updating tokens:', error);
+      notification.error({
+        message: 'Update Tokens Failed',
+        description: 'There was an error while updating tokens. Please try again.',
+      });
+    } finally {
+      // Set the loading state back to false, whether the update was successful or not
+      setUpdatingTokens(false);
+    }
+  };  
+
   return (
     <div className="dashboard-section">
       <div className="dashboard-container">
@@ -133,13 +177,13 @@ const Home = () => {
           <div className="card-Items">
             <div className="card total-balance">
               <h4 className="card-title">Total Rewards</h4>
-              <p>{gettotalRewards}</p>
+              <p>{gettotalRewards} SWORD</p>
             </div>
           </div>
           <div className="card-Items">
             <div className="card reward-per-claim">
               <h4 className="card-title">Reward Per Claim</h4>
-              <p>{rewardPerClaim}</p>
+              <p>{rewardPerClaim} SWORD</p>
             </div>
           </div>
           <div className="card-Items">
@@ -151,13 +195,46 @@ const Home = () => {
           <div className="card-Items">
             <div className="card unclaimed-tokens">
               <h4 className="card-title">Unclaimed Tokens</h4>
-              <p>{unclaimedTokens}</p>
+              <p>{unclaimedTokens} SWORD</p>
             </div>
           </div>
         </div>
-        <button className="claim-button" onClick={handleClaimTokens} disabled={!isConnected || isRewardsPaused}>
-          Claim Tokens
-        </button>
+        
+         {/* Message about updating tokens */}
+         <Paragraph style={{ marginBottom: '16px', color: 'white' }}>
+          Click the button below to update your unclaimedTokens and avoid forfeiture.
+        </Paragraph>
+
+        {/* Customized Spin component for loading indicator */}
+        <Spin
+          spinning={claimingTokens || updatingTokens}
+          tip="Loading..."
+          size="large"
+          wrapperClassName="custom-spin-wrapper"
+        >
+
+          {/* Buttons container with conditional styling */}
+          <div className={`buttons-container ${updatingTokens ? 'column-layout' : 'row-layout'}`}>
+            {/* Claim Tokens button */}
+            <button
+              className="claim-button"
+              onClick={handleClaimTokens}
+              disabled={!isConnected || isRewardsPaused || claimingTokens}
+            >
+              Claim Tokens
+            </button>
+
+            {/* Update Tokens button */}
+            <button
+              className="update-tokens-button"
+              onClick={handleUpdateTokens}
+              disabled={!isConnected || isRewardsPaused ||  updatingTokens}
+            >
+              Update Tokens
+            </button>
+          </div>
+          
+        </Spin>
       </div>
     </div>
   );
