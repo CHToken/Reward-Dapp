@@ -12,7 +12,7 @@ const Home = () => {
   const [web3Instance, setWeb3Instance] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isRewardsPaused, setIsRewardsPaused] = useState(true);
-  const [totalRewards, setTotalRewards] = useState(0);
+  const [gettotalRewards, setgetTotalRewards] = useState(0);
   const [unclaimedTokens, setUnclaimedTokens] = useState(0);
   const [nextClaimTime, setNextClaimTime] = useState(0);
   const [rewardPerClaim, setRewardPerClaim] = useState(0);
@@ -20,40 +20,43 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const web3 = new Web3(window.ethereum);
-        setWeb3Instance(web3);
-
-        // Enable autoRefreshOnNetworkChange to avoid memory leak
-        web3.eth.handleRevert = true;
-        web3.eth.autoRefreshOnNetworkChange = false;
-
-        const accounts = await web3.eth.getAccounts();
-        const currentAccount = accounts[0] || '';
-
-        setAccount(currentAccount);
-
-        // Always attempt to fetch data, even if not connected
-        const contractInstance = new web3.eth.Contract(TokenClaimABI, CONTRACT_ADDRESS);
-        setContract(contractInstance);
-
-        const contractState = await contractInstance.methods.contractState().call();
-        const totalRewards = await contractInstance.methods.totalRewards().call();
-        const unclaimedTokens = await contractInstance.methods.getUpdatedUnclaimedTokens(currentAccount).call();
-        const rewardPerClaim = await contractInstance.methods.rewardPerClaim().call();
-        const nextClaimTime = await contractInstance.methods.getNextClaimTime(currentAccount).call();
-
-        setIsConnected(accounts.length > 0);
-        setIsRewardsPaused(contractState > '0');
-        setTotalRewards(web3.utils.fromWei(totalRewards, 'ether'));
-        setUnclaimedTokens(web3.utils.fromWei(unclaimedTokens, 'ether'));
-        setRewardPerClaim(web3.utils.fromWei(rewardPerClaim, 'ether'));
-        setNextClaimTime(nextClaimTime);
-
-        console.log('Data Fetched Successfully');
+          const web3 = new Web3(window.ethereum);
+          setWeb3Instance(web3);
+  
+          // Enable autoRefreshOnNetworkChange to avoid memory leak
+          web3.eth.handleRevert = true;
+          web3.eth.autoRefreshOnNetworkChange = false;
+  
+          const accounts = await web3.eth.getAccounts();
+          const currentAccount = accounts[0] || '';
+  
+          setAccount(currentAccount);
+  
+          // Always attempt to fetch data, even if not connected
+          const contractInstance = new web3.eth.Contract(TokenClaimABI, CONTRACT_ADDRESS);
+          setContract(contractInstance);
+  
+          const contractState = await contractInstance.methods.contractState().call();
+          const gettotalRewards = await contractInstance.methods.getTotalRewards().call();
+          // Use getUpdatedUnclaimedTokens to get the latest unclaimedTokens value
+          const updatedUnclaimedTokens = await contractInstance.methods.getUpdatedUnclaimedTokens(currentAccount).call();
+          const rewardPerClaim = await contractInstance.methods.rewardPerClaim().call();
+          const nextClaimTime = await contractInstance.methods.getNextClaimTime(currentAccount).call();
+  
+          setIsConnected(accounts.length > 0);
+          setIsRewardsPaused(contractState > '0');
+          setgetTotalRewards(web3.utils.fromWei(gettotalRewards, 'ether'));
+          // Update unclaimedTokens with the latest value
+          setUnclaimedTokens(web3.utils.fromWei(updatedUnclaimedTokens, 'ether'));
+          setRewardPerClaim(web3.utils.fromWei(rewardPerClaim, 'ether'));
+          setNextClaimTime(nextClaimTime);
+  
+          console.log('Data Fetched Successfully');
+          console.log("Updated Total Rewards:", (web3.utils.fromWei(gettotalRewards, 'ether')));
       } catch (error) {
-        console.error('Error initializing web3:', error);
+          console.error('Error initializing web3:', error);
       }
-    };
+  };  
 
     // Fetch data immediately when the component mounts
     fetchData();
@@ -130,7 +133,7 @@ const Home = () => {
           <div className="card-Items">
             <div className="card total-balance">
               <h4 className="card-title">Total Rewards</h4>
-              <p>{totalRewards}</p>
+              <p>{gettotalRewards}</p>
             </div>
           </div>
           <div className="card-Items">
